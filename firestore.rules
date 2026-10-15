@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Public campus profiles readable by authenticated peers
+    match /users/{userId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && (request.auth.uid == userId || request.resource.data.id == userId);
+      allow update: if isSignedIn();
+      allow delete: if isOwner(userId);
+    }
+
+    // Requests between learners and teachers
+    match /requests/{requestId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.fromUserId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.fromUserId == request.auth.uid ||
+        resource.data.toUserId == request.auth.uid
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.fromUserId == request.auth.uid ||
+        resource.data.toUserId == request.auth.uid
+      );
+    }
+
+    // Scheduled & completed sessions
+    match /sessions/{sessionId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && (
+        request.resource.data.teacherId == request.auth.uid ||
+        request.resource.data.learnerId == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        resource.data.teacherId == request.auth.uid ||
+        resource.data.learnerId == request.auth.uid
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.teacherId == request.auth.uid ||
+        resource.data.learnerId == request.auth.uid
+      );
+    }
+
+    // Credit ledger records
+    match /transactions/{transactionId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if false; // immutable ledger
+    }
+
+    // Student reviews
+    match /reviews/{reviewId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.learnerId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.learnerId == request.auth.uid;
+      allow delete: if false;
+    }
+  }
+}

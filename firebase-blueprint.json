@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered campus user profile with teaching and learning skills.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "headline": { "type": "string" },
+        "bio": { "type": "string" },
+        "location": { "type": "string" },
+        "avatar": { "type": "string" },
+        "credits": { "type": "number" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "joinedDate": { "type": "string" },
+        "skillsTeaching": { "type": "array" },
+        "skillsLearning": { "type": "array" }
+      },
+      "required": ["id", "name", "credits"]
+    },
+    "LearningRequest": {
+      "title": "LearningRequest",
+      "description": "Session invitation sent from learner to teacher.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fromUserId": { "type": "string" },
+        "toUserId": { "type": "string" },
+        "skillName": { "type": "string" },
+        "note": { "type": "string" },
+        "proposedDate": { "type": "string" },
+        "creditCost": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "cancelled"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "fromUserId", "toUserId", "skillName", "status", "creditCost"]
+    },
+    "Session": {
+      "title": "Session",
+      "description": "Scheduled or completed skill exchange session between two peers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "requestId": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "learnerId": { "type": "string" },
+        "skillName": { "type": "string" },
+        "scheduledDate": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "status": { "type": "string", "enum": ["upcoming", "completed", "cancelled"] },
+        "meetingLink": { "type": "string" },
+        "creditsTransferred": { "type": "boolean" },
+        "reviewSubmitted": { "type": "boolean" },
+        "completedAt": { "type": "string" }
+      },
+      "required": ["id", "teacherId", "learnerId", "skillName", "status", "creditsTransferred"]
+    },
+    "CreditTransaction": {
+      "title": "CreditTransaction",
+      "description": "Ledger entry for Skill Credits earned, spent, or granted.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["earned_teaching", "spent_learning", "signup_bonus", "demo_grant"] },
+        "description": { "type": "string" },
+        "relatedSessionId": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "type", "description", "timestamp"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Student rating and review for a completed learning session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "learnerId": { "type": "string" },
+        "learnerName": { "type": "string" },
+        "learnerAvatar": { "type": "string" },
+        "skillName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "sessionId", "teacherId", "learnerId", "rating", "comment"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles indexed by User ID."
+    },
+    "/requests/{requestId}": {
+      "schema": "LearningRequest",
+      "description": "Learning session requests."
+    },
+    "/sessions/{sessionId}": {
+      "schema": "Session",
+      "description": "Scheduled and completed exchange sessions."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "CreditTransaction",
+      "description": "Credit ledger transactions."
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Session ratings and feedback."
+    }
+  }
+}
